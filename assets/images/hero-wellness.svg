@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="100%" height="100%" role="img" aria-label="Active wellness and fitness illustration">
+  <defs>
+    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="55%" stop-color="#115e59"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="hillGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0d9488" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="hillGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.15"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="75%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0f766e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="440" height="280" rx="16" fill="url(#heroBg)"/>
+
+  <!-- Ambient Morning Sun Glow -->
+  <circle cx="330" cy="85" r="100" fill="url(#sunGlow)"/>
+
+  <!-- Sun Circle -->
+  <circle cx="330" cy="85" r="32" fill="#fef9c3" opacity="0.85" filter="url(#softGlow)"/>
+  <circle cx="330" cy="85" r="42" fill="none" stroke="#fef08a" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
+
+  <!-- Distant Hills -->
+  <path d="M0 210 Q90 140 220 185 T440 160 L440 280 L0 280 Z" fill="url(#hillGrad1)"/>
+  <path d="M0 235 Q130 180 270 215 T440 200 L440 280 L0 280 Z" fill="url(#hillGrad2)"/>
+
+  <!-- Vitality Pulse Line across background -->
+  <path d="M20 220 L100 220 L115 195 L130 240 L145 205 L160 225 L175 220 L420 220" 
+        fill="none" stroke="url(#pulseGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+  <circle cx="130" cy="240" r="3" fill="#ffffff" filter="url(#softGlow)"/>
+  <circle cx="145" cy="205" r="3" fill="#2dd4bf"/>
+
+  <!-- Stylized Dynamic Runner -->
+  <g transform="translate(195, 75)" id="runner-figure">
+    <!-- Head -->
+    <circle cx="48" cy="22" r="10" fill="#ffffff"/>
+    
+    <!-- Torso (forward lean) -->
+    <path d="M46 32 L36 72" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+    
+    <!-- Left Arm (pumping back) -->
+    <path d="M43 42 L24 55 L16 48" fill="none" stroke="#2dd4bf" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Right Arm (driving forward) -->
+    <path d="M45 42 L62 48 L72 36" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Left Leg (driving high knee forward) -->
+    <path d="M36 72 L54 88 L68 125" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Shoe Left -->
+    <path d="M68 125 L80 128" stroke="#34d399" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Right Leg (pushing off back) -->
+    <path d="M36 72 L18 92 L2 118" fill="none" stroke="#2dd4bf" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Shoe Right -->
+    <path d="M2 118 L-8 122" stroke="#34d399" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Speed / Motion particles -->
+    <line x1="-12" y1="46" x2="-2" y2="46" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    <line x1="-20" y1="62" x2="-6" y2="62" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+    <line x1="-15" y1="78" x2="-4" y2="78" stroke="#34d399" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- Floating Wellness Badges -->
+  <!-- 1. Activity Badge (Steps/Move) -->
+  <g transform="translate(30, 40)">
+    <rect width="40" height="40" rx="12" fill="#065f46" stroke="#34d399" stroke-width="1.5" opacity="0.9"/>
+    <!-- Sneaker/Step Icon -->
+    <path d="M12 26 L18 26 C22 26 25 24 27 21 L29 18 L32 20 C32 24 28 27 22 27 L12 27 Z" fill="#34d399"/>
+    <circle cx="16" cy="18" r="2" fill="#ffffff"/>
+  </g>
+
+  <!-- 2. Hydration Badge (Water) -->
+  <g transform="translate(42, 110)">
+    <rect width="36" height="36" rx="10" fill="#075985" stroke="#38bdf8" stroke-width="1.5" opacity="0.9"/>
+    <!-- Water Drop Icon -->
+    <path d="M18 10 C18 10 26 18 26 22 A8 8 0 0 1 10 22 C10 18 18 10 18 10 Z" fill="#38bdf8"/>
+  </g>
+
+  <!-- 3. Sleep Badge (Rest) -->
+  <g transform="translate(365, 145)">
+    <rect width="38" height="38" rx="10" fill="#3730a3" stroke="#a5b4fc" stroke-width="1.5" opacity="0.9"/>
+    <!-- Crescent Moon Icon -->
+    <path d="M24 14 A7 7 0 1 1 15 25 A8 8 0 0 0 24 14 Z" fill="#c7d2fe"/>
+    <circle cx="27" cy="13" r="1.5" fill="#fef08a"/>
+  </g>
+
+  <!-- 4. Exercise Badge (Workout) -->
+  <g transform="translate(345, 210)">
+    <rect width="36" height="36" rx="10" fill="#92400e" stroke="#fbbf24" stroke-width="1.5" opacity="0.9"/>
+    <!-- Dumbbell Icon -->
+    <path d="M11 15 H14 V21 H11 Z M22 15 H25 V21 H22 Z M14 17 H22 V19 H14 Z" fill="#fbbf24"/>
+  </g>
+
+  <!-- Bottom Accent Tag -->
+  <g transform="translate(30, 235)">
+    <rect width="168" height="26" rx="13" fill="rgba(15, 23, 42, 0.6)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1"/>
+    <circle cx="44" cy="248" r="4" fill="#10b981"/>
+    <text x="54" y="252" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" letter-spacing="0.5">DAILY WELLNESS</text>
+  </g>
+</svg>
