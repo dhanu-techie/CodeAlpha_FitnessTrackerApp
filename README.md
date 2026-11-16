@@ -20,8 +20,8 @@ A modern, responsive, beginner-friendly web application designed to help users r
 ## 🚀 Key Features
 
 ### 1. Dashboard Overview
-- **Four Habit Summary Cards:** Displays today's recorded activity, hydration volume, sleep duration, and exercise sessions with animated progress bars.
-- **Today's Wellness Snapshot:** Real-time consolidated summary of movement, hydration, rest, and workout metrics for the current day.
+- **Five Habit Summary Cards:** Displays today's recorded activity, hydration volume, sleep duration, exercise sessions, and total calories burned with animated progress bars and metric breakdowns.
+- **Today's Wellness Snapshot:** Real-time consolidated summary of movement, hydration, rest, workouts, and active calories for the current day.
 - **7-Day Consistency Mini-Preview:** Quick visual glance of the 7-day habit completion pattern directly on the dashboard.
 
 ### 2. Daily Activity Tracker
@@ -39,21 +39,23 @@ A modern, responsive, beginner-friendly web application designed to help users r
 
 ### 4. Sleep Tracker
 - **Duration & Quality:** Records sleep duration (0.5 to 24 hours in 0.5-hr steps) and subjective rest quality (*Restful & Refreshed*, *Good / Normal*, *Light / Disturbed*, or *Tired / Inadequate*).
+- **Multi-Entry Daily Summation:** Accurately sums all sleep sessions logged on the same date (e.g., nighttime sleep plus an afternoon nap).
 - **Bedtime Habits / Notes:** Optional habit logging (e.g., reading before bed, screen-free evening).
 - **Sleep Log Records:** Saved records with dedicated indigo tags and delete support.
 
 ### 5. Exercise & Workout Tracker
 - **Workout Suggestions:** Built-in datalist suggestions for common exercises (*Brisk Walking*, *Running*, *Cycling*, *Yoga*, *Strength Training*, *Swimming*, *Pilates*, etc.) while supporting custom entries.
 - **Session Duration & Intensity:** Logs duration in minutes and intensity (*Gentle*, *Moderate*, *Energetic*).
-- **Full In-Place Editing:** Clicking edit loads the record into the form, activates edit mode, smoothly scrolls to the form, and updates the existing entry without creating duplicates.
-- **Session Deletion:** Removes individual workouts and updates dashboard counters immediately.
+- **Manual & Estimated Calorie Logging:** Supports direct manual entry of calories burned (kcal). If left blank, transparently computes an approximate estimate using standard MET intensity guidelines, clearly labeling estimated figures (`~X kcal (est.)`) so manual measured data always takes priority.
+- **Full In-Place Editing:** Clicking edit loads all fields (including manual calories) into the form, activates edit mode, smoothly scrolls to the form, and updates the existing entry without creating duplicates.
+- **Session Deletion:** Removes individual workouts and updates dashboard and calorie counters immediately.
 
 ### 6. Dynamic Weekly Progress & Pure CSS Bar Chart
 - **Rolling 7-Day Window:** Automatically computes the past 7 consecutive days `[Today - 6 days ... Today]` using timezone-safe local date arithmetic across week, month, and year boundaries.
 - **Pure CSS Bar Chart:** Proportional vertical bars dynamically scaled to recorded activity, with hover tooltips, date labels, and dedicated highlight on *Today*.
 - **Rest Day Distinction:** Unrecorded or zero-activity days display `0m` with `0%` bar fill rather than misleading placeholder data.
 - **Daily Target Completion:** Days reaching or exceeding the healthy habit target (30 minutes of daily intentional movement) receive a green `.target-met` achievement badge.
-- **Weekly Summary Badges:** Computes weekly active minutes, average daily water volume, average sleep hours, and total workout count.
+- **Weekly Summary Badges:** Computes weekly active minutes, average daily water volume, average sleep hours, total workout count, and weekly total calories burned (with daily average).
 
 ### 7. Accessibility (WCAG AA Compliant) & User Experience
 - **Semantic Structure:** Clean landmark hierarchy (`<header>`, `<aside>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<footer>`).
@@ -158,7 +160,7 @@ For hot reloading or live preview:
        { "id": "sleep_...", "date": "2026-11-16", "hours": 7.5, "quality": "Restful", "notes": "", "createdAt": "..." }
      ],
      "exercises": [
-       { "id": "ex_...", "date": "2026-11-16", "name": "Yoga", "duration": 30, "intensity": "Moderate", "notes": "", "createdAt": "..." }
+       { "id": "ex_...", "date": "2026-11-16", "name": "Yoga", "duration": 30, "intensity": "Moderate", "calories": 180, "isCalorieEstimated": false, "notes": "", "createdAt": "..." }
      ],
      "lastSaved": "2026-11-16T14:30:00.000Z"
    }

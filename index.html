@@ -250,6 +250,27 @@
                 <button type="button" class="card-action-link" data-target="section-exercise">Log Workout &rarr;</button>
               </div>
             </article>
+
+            <!-- Calories Burned Card -->
+            <article class="summary-card card-calories">
+              <div class="card-header">
+                <div class="card-icon-wrap icon-calories" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                  </svg>
+                </div>
+                <h3 class="card-badge">Calories Burned</h3>
+              </div>
+              <div class="card-body">
+                <div class="card-metric" id="dash-calories-metric">0 <span class="metric-unit-inline">kcal</span></div>
+                <div class="card-unit" id="dash-calories-unit">Active energy today</div>
+                <div class="card-subtext" id="dash-calories-breakdown">0 from workouts &bull; 0 from movement</div>
+              </div>
+              <div class="card-footer">
+                <span class="card-subtext">Estimated &amp; logged active burn</span>
+                <button type="button" class="card-action-link" data-target="section-exercise">Log Workout &rarr;</button>
+              </div>
+            </article>
           </div>
 
           <!-- Dashboard Secondary Layout Grid -->
@@ -288,6 +309,13 @@
                     <div class="snapshot-details">
                       <span class="snapshot-label">Exercise Sessions</span>
                       <span class="snapshot-val" id="snap-exercise">0 sessions logged</span>
+                    </div>
+                  </li>
+                  <li class="snapshot-item">
+                    <div class="snapshot-icon-dot bg-calories"></div>
+                    <div class="snapshot-details">
+                      <span class="snapshot-label">Active Calories</span>
+                      <span class="snapshot-val" id="snap-calories">0 kcal burned today</span>
                     </div>
                   </li>
                 </ul>
@@ -677,6 +705,12 @@
                 </div>
 
                 <div class="form-group">
+                  <label for="exercise-calories">Calories Burned (kcal, Optional)</label>
+                  <input type="number" id="exercise-calories" name="exerciseCalories" min="1" max="10000" placeholder="e.g., 220 (leave blank to auto-estimate)" class="form-input">
+                  <span class="form-hint">Enter calories burned manually, or leave blank to calculate an approximate estimate.</span>
+                </div>
+
+                <div class="form-group">
                   <label for="exercise-notes">Session Notes (Optional)</label>
                   <input type="text" id="exercise-notes" name="exerciseNotes" placeholder="e.g., Outdoor park, felt energized" class="form-input">
                 </div>
@@ -746,6 +780,11 @@
             <div class="weekly-stat-badge">
               <span class="stat-badge-title">Total Workouts</span>
               <span class="stat-badge-value" id="week-total-workouts">0 sessions</span>
+            </div>
+            <div class="weekly-stat-badge stat-calories">
+              <span class="stat-badge-title">Weekly Calories</span>
+              <span class="stat-badge-value" id="week-total-calories">0 kcal</span>
+              <span class="stat-badge-sub" id="week-avg-calories">0 kcal / day avg</span>
             </div>
           </div>
 

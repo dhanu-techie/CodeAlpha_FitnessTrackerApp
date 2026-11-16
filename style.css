@@ -723,6 +723,11 @@ a {
 .summary-card.card-water::before    { background-color: var(--color-water-ui); }
 .summary-card.card-sleep::before    { background-color: var(--color-sleep-ui); }
 .summary-card.card-exercise::before { background-color: var(--color-exercise-ui); }
+.summary-card.card-calories::before { background-color: #e11d48; }
+
+.summary-card.card-calories:hover {
+  border-color: rgba(225, 29, 72, 0.35);
+}
 
 .summary-card:hover {
   transform: translateY(-3px);
@@ -760,6 +765,7 @@ a {
 .icon-water    { background-color: var(--bg-water); color: var(--color-water); border: 1px solid var(--border-water); }
 .icon-sleep    { background-color: var(--bg-sleep); color: var(--color-sleep); border: 1px solid var(--border-sleep); }
 .icon-exercise { background-color: var(--bg-exercise); color: var(--color-exercise); border: 1px solid var(--border-exercise); }
+.icon-calories { background-color: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
 
 .card-badge {
   font-size: 0.775rem;
@@ -970,6 +976,7 @@ a {
 .bg-water    { background-color: var(--color-water-ui); }
 .bg-sleep    { background-color: var(--color-sleep-ui); }
 .bg-exercise { background-color: var(--color-exercise-ui); }
+.bg-calories { background-color: #e11d48; }
 
 .snapshot-details {
   display: flex;
@@ -1536,6 +1543,7 @@ label {
 .record-tag.tag-blue  { background-color: var(--bg-water); color: var(--color-water); border-color: var(--border-water); }
 .record-tag.tag-indigo{ background-color: var(--bg-sleep); color: var(--color-sleep); border-color: var(--border-sleep); }
 .record-tag.tag-green { background-color: var(--bg-exercise); color: var(--color-exercise); border-color: var(--border-exercise); }
+.record-tag.tag-rose  { background-color: #fff1f2; color: #be123c; border-color: #fecdd3; font-weight: 600; }
 
 .record-meta {
   font-size: 0.795rem;
@@ -1634,6 +1642,17 @@ label {
   right: 0;
   height: 3px;
   background-color: var(--primary);
+}
+
+.weekly-stat-badge.stat-calories::before {
+  background-color: #e11d48;
+}
+
+.stat-badge-sub {
+  font-size: 0.775rem;
+  color: var(--slate-500);
+  margin-top: 0.25rem;
+  font-weight: 500;
 }
 
 .weekly-stat-badge:hover {

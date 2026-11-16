@@ -91,7 +91,14 @@ function loadFromLocalStorage() {
       appData.sleepLogs = parsed.sleepLogs.filter(isValidSleepEntry);
     }
     if (Array.isArray(parsed.exercises)) {
-      appData.exercises = parsed.exercises.filter(isValidExerciseEntry);
+      appData.exercises = parsed.exercises.filter(isValidExerciseEntry).map((ex) => {
+        // Backward compatibility: If older record has no calories, compute estimate
+        if (typeof ex.calories !== 'number' || isNaN(ex.calories) || ex.calories <= 0) {
+          ex.calories = estimateExerciseCalories(ex.duration, ex.intensity, ex.name);
+          ex.isCalorieEstimated = true;
+        }
+        return ex;
+      });
     }
   } catch (err) {
     console.warn('LocalStorage data was invalid or corrupted. Starting with clean defaults.', err);
@@ -209,6 +216,48 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+/**
+ * Calculates estimated active calories burned for an exercise session
+ * when manual calories are not provided.
+ * Uses standard MET approximations:
+ * - Gentle / Light: ~5 kcal / min
+ * - Moderate: ~8 kcal / min
+ * - Energetic / High: ~12 kcal / min
+ */
+function estimateExerciseCalories(durationMins, intensity, exerciseName) {
+  const duration = Math.max(0, Number(durationMins) || 0);
+  let ratePerMinute = 8; // Default moderate
+
+  const intensityLower = String(intensity || '').toLowerCase();
+  if (intensityLower.includes('gentle') || intensityLower.includes('light')) {
+    ratePerMinute = 5;
+  } else if (intensityLower.includes('energetic') || intensityLower.includes('high')) {
+    ratePerMinute = 12;
+  }
+
+  const nameLower = String(exerciseName || '').toLowerCase();
+  if (nameLower.includes('run') || nameLower.includes('jog') || nameLower.includes('hiit') || nameLower.includes('rope')) {
+    ratePerMinute = Math.max(ratePerMinute, 11);
+  } else if (nameLower.includes('walk') || nameLower.includes('yoga') || nameLower.includes('stretch') || nameLower.includes('pilates')) {
+    ratePerMinute = Math.min(ratePerMinute, 6);
+  }
+
+  return Math.round(duration * ratePerMinute);
+}
+
+/**
+ * Calculates active movement calories from daily steps or active minutes
+ * Standard reference: ~0.04 kcal per step (1,000 steps ≈ 40 kcal)
+ * Active movement minutes: ~4 kcal per minute
+ */
+function estimateActivityCalories(metricType, amount) {
+  const val = Math.max(0, Number(amount) || 0);
+  if (metricType === 'minutes') {
+    return Math.round(val * 4);
+  }
+  return Math.round(val * 0.04);
 }
 
 // ==========================================================================
@@ -719,6 +768,7 @@ function initExerciseTracker() {
     const nameInput = document.getElementById('exercise-name');
     const durationInput = document.getElementById('exercise-duration');
     const intensitySelect = document.getElementById('exercise-intensity');
+    const caloriesInput = document.getElementById('exercise-calories');
     const notesInput = document.getElementById('exercise-notes');
 
     const editId = editIdInput ? editIdInput.value.trim() : '';
@@ -726,6 +776,7 @@ function initExerciseTracker() {
     const nameVal = nameInput.value.trim();
     const durationVal = parseFloat(durationInput.value);
     const intensityVal = intensitySelect.value;
+    const rawCaloriesVal = caloriesInput ? caloriesInput.value.trim() : '';
     const notesVal = notesInput ? notesInput.value.trim() : '';
 
     if (!dateVal) {
@@ -746,6 +797,23 @@ function initExerciseTracker() {
       return;
     }
 
+    // Optional manual calories validation
+    let manualCalories = null;
+    if (rawCaloriesVal !== '') {
+      const parsedCal = parseFloat(rawCaloriesVal);
+      if (isNaN(parsedCal) || parsedCal <= 0 || parsedCal > 10000) {
+        if (caloriesInput) markInputError(caloriesInput);
+        showFeedback('exercise-feedback', 'error', 'Please enter a realistic calorie number between 1 and 10,000 kcal, or leave blank to auto-estimate.');
+        return;
+      }
+      manualCalories = Math.round(parsedCal);
+    }
+
+    const isManualCalories = manualCalories !== null;
+    const finalCalories = isManualCalories
+      ? manualCalories
+      : estimateExerciseCalories(durationVal, intensityVal, nameVal);
+
     if (editId) {
       // EDIT MODE: Update existing entry in place to prevent duplicates
       const existingEntry = appData.exercises.find((item) => item.id === editId);
@@ -754,15 +822,21 @@ function initExerciseTracker() {
         existingEntry.name = nameVal;
         existingEntry.duration = Math.round(durationVal);
         existingEntry.intensity = intensityVal;
+        existingEntry.calories = finalCalories;
+        existingEntry.isCalorieEstimated = !isManualCalories;
         existingEntry.notes = notesVal;
         existingEntry.updatedAt = new Date().toISOString();
 
         saveToLocalStorage();
 
+        const calFeedbackText = existingEntry.isCalorieEstimated
+          ? `~${existingEntry.calories} kcal est.`
+          : `${existingEntry.calories} kcal`;
+
         showFeedback(
           'exercise-feedback',
           'success',
-          `Updated "${existingEntry.name}" (${existingEntry.duration} mins) successfully!`
+          `Updated "${existingEntry.name}" (${existingEntry.duration} mins, ${calFeedbackText}) successfully!`
         );
       }
       resetExerciseEditState();
@@ -774,6 +848,8 @@ function initExerciseTracker() {
         name: nameVal,
         duration: Math.round(durationVal),
         intensity: intensityVal,
+        calories: finalCalories,
+        isCalorieEstimated: !isManualCalories,
         notes: notesVal,
         createdAt: new Date().toISOString(),
       };
@@ -781,10 +857,14 @@ function initExerciseTracker() {
       appData.exercises.unshift(newEntry);
       saveToLocalStorage();
 
+      const calFeedbackText = newEntry.isCalorieEstimated
+        ? `~${newEntry.calories} kcal est.`
+        : `${newEntry.calories} kcal`;
+
       showFeedback(
         'exercise-feedback',
         'success',
-        `Logged workout "${newEntry.name}" (${newEntry.duration} mins) for ${formatDisplayDate(newEntry.date)}!`
+        `Logged workout "${newEntry.name}" (${newEntry.duration} mins, ${calFeedbackText}) for ${formatDisplayDate(newEntry.date)}!`
       );
     }
 
@@ -793,9 +873,11 @@ function initExerciseTracker() {
 
     nameInput.value = '';
     durationInput.value = '';
+    if (caloriesInput) caloriesInput.value = '';
     if (notesInput) notesInput.value = '';
     nameInput.classList.remove('input-error');
     durationInput.classList.remove('input-error');
+    if (caloriesInput) caloriesInput.classList.remove('input-error');
   });
 
   if (cancelEditBtn) {
@@ -816,11 +898,13 @@ function initExerciseTracker() {
 
 function resetExerciseEditState() {
   const editIdInput = document.getElementById('exercise-edit-id');
+  const caloriesInput = document.getElementById('exercise-calories');
   const submitBtn = document.getElementById('btn-save-exercise');
   const cancelBtn = document.getElementById('btn-cancel-exercise-edit');
   const formTitle = document.getElementById('exercise-form-title');
 
   if (editIdInput) editIdInput.value = '';
+  if (caloriesInput) caloriesInput.value = '';
   if (formTitle) formTitle.textContent = 'Add Exercise Session';
   if (cancelBtn) cancelBtn.style.display = 'none';
 
@@ -853,12 +937,17 @@ function renderExerciseRecords() {
 
   recordsList.innerHTML = appData.exercises
     .map((item) => {
+      const calorieLabel = item.isCalorieEstimated
+        ? `~${item.calories} kcal (est.)`
+        : `${item.calories} kcal`;
+
       return `
       <div class="record-item" data-id="${item.id}">
         <div class="record-info">
           <div class="record-title-row">
             <span class="record-title">${escapeHtml(item.name)}</span>
             <span class="record-tag tag-green">${item.duration} mins</span>
+            <span class="record-tag tag-rose" title="${item.isCalorieEstimated ? 'Approximate calculation based on intensity and duration' : 'Manually entered value'}">${calorieLabel}</span>
             <span class="record-tag">${escapeHtml(item.intensity)}</span>
           </div>
           <div class="record-meta">${formatDisplayDate(item.date)}</div>
@@ -893,6 +982,7 @@ window.startEditExercise = function (id) {
   const nameInput = document.getElementById('exercise-name');
   const durationInput = document.getElementById('exercise-duration');
   const intensitySelect = document.getElementById('exercise-intensity');
+  const caloriesInput = document.getElementById('exercise-calories');
   const notesInput = document.getElementById('exercise-notes');
   const submitBtn = document.getElementById('btn-save-exercise');
   const cancelBtn = document.getElementById('btn-cancel-exercise-edit');
@@ -903,6 +993,7 @@ window.startEditExercise = function (id) {
   if (nameInput) nameInput.value = item.name;
   if (durationInput) durationInput.value = item.duration;
   if (intensitySelect) intensitySelect.value = item.intensity;
+  if (caloriesInput) caloriesInput.value = item.isCalorieEstimated ? '' : item.calories;
   if (notesInput) notesInput.value = item.notes || '';
 
   if (formTitle) formTitle.textContent = `Edit Exercise Session`;
@@ -1040,8 +1131,9 @@ function updateDashboardSummaries() {
     snapWater.textContent = `${totalWaterMl.toLocaleString()} ml recorded today`;
   }
 
-  // 3. Sleep Calculation (Today only)
+  // 3. Sleep Calculation (Today only) - Fixed for multi-entry accumulation
   const todaySleepLogs = appData.sleepLogs.filter((item) => item.date === todayStr);
+  const totalSleepHours = todaySleepLogs.reduce((acc, cur) => acc + (Number(cur.hours) || 0), 0);
   const latestSleep = todaySleepLogs.length > 0 ? todaySleepLogs[0] : null;
 
   const dashSleepMetric = document.getElementById('dash-sleep-metric');
@@ -1049,19 +1141,25 @@ function updateDashboardSummaries() {
   const dashSleepProgress = document.getElementById('dash-sleep-progress');
   const snapSleep = document.getElementById('snap-sleep');
 
-  if (latestSleep) {
+  if (todaySleepLogs.length > 0) {
     if (dashSleepMetric) {
-      dashSleepMetric.innerHTML = `${latestSleep.hours} <span class="metric-unit-inline">hrs</span>`;
+      dashSleepMetric.innerHTML = `${totalSleepHours} <span class="metric-unit-inline">hrs</span>`;
     }
     if (dashSleepQuality) {
-      dashSleepQuality.textContent = `${latestSleep.quality} rest`;
+      dashSleepQuality.textContent =
+        todaySleepLogs.length > 1
+          ? `${todaySleepLogs.length} entries (${totalSleepHours} hrs)`
+          : `${latestSleep.quality} rest`;
     }
     if (dashSleepProgress) {
-      const sleepPercent = Math.min(100, Math.round((latestSleep.hours / 8) * 100));
+      const sleepPercent = Math.min(100, Math.round((totalSleepHours / 8) * 100));
       dashSleepProgress.style.width = `${sleepPercent}%`;
     }
     if (snapSleep) {
-      snapSleep.textContent = `${latestSleep.hours} hrs &bull; ${latestSleep.quality}`;
+      snapSleep.textContent =
+        todaySleepLogs.length > 1
+          ? `${totalSleepHours} hrs logged (${todaySleepLogs.length} entries)`
+          : `${latestSleep.hours} hrs &bull; ${latestSleep.quality}`;
     }
   } else {
     if (dashSleepMetric) {
@@ -1082,6 +1180,7 @@ function updateDashboardSummaries() {
   const todayExercises = appData.exercises.filter((item) => item.date === todayStr);
   const exerciseCount = todayExercises.length;
   const totalWorkoutMins = todayExercises.reduce((acc, cur) => acc + cur.duration, 0);
+  const totalWorkoutCalories = todayExercises.reduce((acc, cur) => acc + (Number(cur.calories) || 0), 0);
 
   const dashExerciseMetric = document.getElementById('dash-exercise-metric');
   const dashExerciseCount = document.getElementById('dash-exercise-count');
@@ -1103,6 +1202,33 @@ function updateDashboardSummaries() {
       exerciseCount === 0
         ? '0 sessions logged'
         : `${exerciseCount} session${exerciseCount === 1 ? '' : 's'} (${totalWorkoutMins} mins)`;
+  }
+
+  // 5. Calories Calculation (Today only: workouts + steps/movement)
+  let todayActivityCalories = 0;
+  todayActivities.forEach((item) => {
+    todayActivityCalories += estimateActivityCalories(item.metricType, item.amount);
+  });
+  const totalDailyCalories = totalWorkoutCalories + todayActivityCalories;
+
+  const dashCaloriesMetric = document.getElementById('dash-calories-metric');
+  const dashCaloriesUnit = document.getElementById('dash-calories-unit');
+  const dashCaloriesBreakdown = document.getElementById('dash-calories-breakdown');
+  const snapCalories = document.getElementById('snap-calories');
+
+  if (dashCaloriesMetric) {
+    dashCaloriesMetric.innerHTML = `${totalDailyCalories.toLocaleString()} <span class="metric-unit-inline">kcal</span>`;
+  }
+  if (dashCaloriesUnit) {
+    dashCaloriesUnit.textContent = totalDailyCalories > 0 ? 'Active energy burned today' : 'No burn recorded today';
+  }
+  if (dashCaloriesBreakdown) {
+    dashCaloriesBreakdown.textContent = `${totalWorkoutCalories.toLocaleString()} from workouts • ${todayActivityCalories.toLocaleString()} from movement`;
+  }
+  if (snapCalories) {
+    snapCalories.textContent = totalDailyCalories > 0
+      ? `${totalDailyCalories.toLocaleString()} kcal burned today`
+      : '0 kcal burned today';
   }
 
   // Synchronize 7-Day Weekly Progress and Charts
@@ -1161,13 +1287,16 @@ function getDailyActivityMetrics(isoDate) {
   const dayExercises = appData.exercises.filter((item) => item.date === isoDate);
   const workoutMins = dayExercises.reduce((sum, item) => sum + item.duration, 0);
   const workoutCount = dayExercises.length;
+  const workoutCalories = dayExercises.reduce((sum, item) => sum + (Number(item.calories) || 0), 0);
 
   // 2. Activity logs on this date
   const dayActivities = appData.activities.filter((item) => item.date === isoDate);
   let directActiveMins = 0;
   let stepsCount = 0;
+  let activityCalories = 0;
 
   dayActivities.forEach((item) => {
+    activityCalories += estimateActivityCalories(item.metricType, item.amount);
     if (item.metricType === 'minutes') {
       directActiveMins += item.amount;
     } else {
@@ -1178,27 +1307,31 @@ function getDailyActivityMetrics(isoDate) {
   });
 
   const totalActiveMins = workoutMins + directActiveMins;
+  const totalCalories = workoutCalories + activityCalories;
   const isTargetAchieved = totalActiveMins >= DAILY_ACTIVITY_TARGET_MINUTES;
 
   // 3. Water intake on this date
   const dayWater = appData.waterLogs.filter((item) => item.date === isoDate);
   const totalWaterMl = Math.max(0, dayWater.reduce((sum, item) => sum + item.amount, 0));
 
-  // 4. Sleep on this date
+  // 4. Sleep on this date (summing all recorded durations for the day)
   const daySleep = appData.sleepLogs.filter((item) => item.date === isoDate);
-  const sleepHours = daySleep.length > 0 ? daySleep[0].hours : 0;
+  const sleepHours = daySleep.reduce((sum, item) => sum + (Number(item.hours) || 0), 0);
 
   return {
     isoDate,
     workoutMins,
     workoutCount,
+    workoutCalories,
     stepsCount,
     directActiveMins,
+    activityCalories,
     totalActiveMins,
+    totalCalories,
     isTargetAchieved,
     totalWaterMl,
     sleepHours,
-    hasAnyData: workoutMins > 0 || dayActivities.length > 0 || totalWaterMl > 0 || sleepHours > 0,
+    hasAnyData: workoutMins > 0 || dayActivities.length > 0 || totalWaterMl > 0 || sleepHours > 0 || totalCalories > 0,
   };
 }
 
@@ -1214,6 +1347,7 @@ function updateWeeklyProgress() {
 
   // 1. Aggregate Weekly Summary Totals
   let weeklyActiveMinutes = 0;
+  let weeklyTotalCalories = 0;
   let weeklyTotalWaterMl = 0;
   let weeklyTotalSleepHours = 0;
   let daysWithSleepRecorded = 0;
@@ -1221,6 +1355,7 @@ function updateWeeklyProgress() {
 
   dailyMetrics.forEach((d) => {
     weeklyActiveMinutes += d.totalActiveMins;
+    weeklyTotalCalories += d.totalCalories;
     weeklyTotalWaterMl += d.totalWaterMl;
     weeklyTotalWorkouts += d.workoutCount;
     if (d.sleepHours > 0) {
@@ -1230,6 +1365,7 @@ function updateWeeklyProgress() {
   });
 
   const avgDailyWaterMl = Math.round(weeklyTotalWaterMl / 7);
+  const avgDailyCalories = Math.round(weeklyTotalCalories / 7);
   const avgSleepHours =
     daysWithSleepRecorded > 0 ? (weeklyTotalSleepHours / daysWithSleepRecorded).toFixed(1) : '0';
 
@@ -1238,6 +1374,8 @@ function updateWeeklyProgress() {
   const weekAvgWaterElem = document.getElementById('week-avg-water');
   const weekAvgSleepElem = document.getElementById('week-avg-sleep');
   const weekTotalWorkoutsElem = document.getElementById('week-total-workouts');
+  const weekTotalCaloriesElem = document.getElementById('week-total-calories');
+  const weekAvgCaloriesElem = document.getElementById('week-avg-calories');
   const chartDateRangeElem = document.getElementById('chart-date-range');
 
   if (weekTotalActElem) {
@@ -1251,6 +1389,12 @@ function updateWeeklyProgress() {
   }
   if (weekTotalWorkoutsElem) {
     weekTotalWorkoutsElem.textContent = `${weeklyTotalWorkouts} session${weeklyTotalWorkouts === 1 ? '' : 's'}`;
+  }
+  if (weekTotalCaloriesElem) {
+    weekTotalCaloriesElem.textContent = `${weeklyTotalCalories.toLocaleString()} kcal`;
+  }
+  if (weekAvgCaloriesElem) {
+    weekAvgCaloriesElem.textContent = `${avgDailyCalories.toLocaleString()} kcal / day avg`;
   }
 
   // Update chart date range subtitle
@@ -1276,7 +1420,7 @@ function updateWeeklyProgress() {
         const emptyClass = d.totalActiveMins === 0 ? 'is-zero' : '';
         const targetClass = d.isTargetAchieved ? 'target-met' : '';
         const targetStatus = d.isTargetAchieved ? 'Goal met' : `${d.totalActiveMins}/${DAILY_ACTIVITY_TARGET_MINUTES}m`;
-        const titleTooltip = `${d.dayName} (${formatDisplayDate(d.isoDate)}): ${d.totalActiveMins} mins [${targetStatus}]`;
+        const titleTooltip = `${d.dayName} (${formatDisplayDate(d.isoDate)}): ${d.totalActiveMins} mins • ~${d.totalCalories} kcal [${targetStatus}]`;
 
         return `
         <div class="chart-bar-column ${dayClass} ${emptyClass} ${targetClass}" tabindex="0" role="img" title="${escapeHtml(titleTooltip)}" aria-label="${escapeHtml(titleTooltip)}">
@@ -1302,7 +1446,7 @@ function updateWeeklyProgress() {
           d.totalActiveMins > 0 ? Math.min(100, Math.max(10, Math.round((d.totalActiveMins / maxDayMins) * 100))) : 0;
         const activeClass = d.isToday ? 'active-day' : '';
         const targetClass = d.isTargetAchieved ? 'target-met' : '';
-        const titleTooltip = `${d.dayName}: ${d.totalActiveMins} mins`;
+        const titleTooltip = `${d.dayName}: ${d.totalActiveMins} mins • ~${d.totalCalories} kcal`;
 
         return `
         <div class="mini-bar-col" title="${escapeHtml(titleTooltip)}">
